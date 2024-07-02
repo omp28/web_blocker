@@ -5,10 +5,16 @@ import { IoMdAdd } from "react-icons/io";
 const Popup = () => {
   const [blocklist, setBlocklist] = useState([]);
   const [newUrl, setNewUrl] = useState("");
+  const [isExtensionEnabled, setIsExtensionEnabled] = useState(true);
 
   useEffect(() => {
     chrome.storage.sync.get(["blocklist"], (result) => {
       setBlocklist(result.blocklist || []);
+    });
+    chrome.storage.sync.get(["isactive_state"], (result) => {
+      setIsExtensionEnabled(
+        result.isactive_state !== undefined ? result.isactive_state : true
+      );
     });
   }, []);
 
@@ -34,8 +40,14 @@ const Popup = () => {
     }
   };
 
+  const toggleExtension = () => {
+    chrome.storage.sync.set({ isactive_state: !isExtensionEnabled }, () => {
+      setIsExtensionEnabled(!isExtensionEnabled);
+    });
+  };
+
   return (
-    <div className="px-8 py-4 bg-white rounded-lg shadow-lg">
+    <div className="px-8 py-4 bg-white rounded-lg shadow-lg w-48">
       <h1 className="text-xl font-bold mb-4 text-center">Website Blocker</h1>
       <div className="mb-4">
         <input
@@ -73,6 +85,39 @@ const Popup = () => {
           </li>
         ))}
       </ul>
+      <div
+        className="mb-4 flex items-center justify-center cursor-pointer absolute top-0 right-0 p-1"
+        onClick={toggleExtension}
+        role="button"
+        tabIndex="0"
+        onKeyPress={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            toggleExtension();
+          }
+        }}
+      >
+        <div className="relative">
+          <input
+            type="checkbox"
+            id="toggle"
+            className="sr-only"
+            checked={isExtensionEnabled}
+            onChange={toggleExtension}
+          />
+          <div
+            className={`block bg-gray-600 w-10 h-6 rounded-full ${
+              isExtensionEnabled ? "bg-green-600" : "bg-red-700"
+            }`}
+          ></div>
+          <div
+            className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition transform ${
+              isExtensionEnabled
+                ? "translate-x-full bg-green-600"
+                : "bg-red-800"
+            }`}
+          ></div>
+        </div>
+      </div>
     </div>
   );
 };
